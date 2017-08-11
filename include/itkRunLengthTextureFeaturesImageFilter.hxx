@@ -115,7 +115,7 @@ RunLengthTextureFeaturesImageFilter<TInputImage, TOutputImage>
   if ( strcmp(outputPtr->GetNameOfClass(), "VectorImage") == 0 )
       {
       typedef typename TOutputImage::AccessorFunctorType AccessorFunctorType;
-      AccessorFunctorType::SetVectorLength( outputPtr, 10 );
+      AccessorFunctorType::SetVectorLength( outputPtr, m_NumberOfBinsPerAxis * m_NumberOfBinsPerAxis );
       }
   outputPtr->Allocate();
 }
@@ -424,84 +424,13 @@ RunLengthTextureFeaturesImageFilter<TInputImage, TOutputImage>
 ::ComputeFeatures( unsigned int **histogram,const unsigned int &totalNumberOfRuns,
                    typename TOutputImage::PixelType &outputPixel)
 {
-  OutputRealType shortRunEmphasis = NumericTraits<OutputRealType>::ZeroValue();
-  OutputRealType longRunEmphasis = NumericTraits<OutputRealType>::ZeroValue();
-  OutputRealType greyLevelNonuniformity = NumericTraits<OutputRealType>::ZeroValue();
-  OutputRealType runLengthNonuniformity = NumericTraits<OutputRealType>::ZeroValue();
-  OutputRealType lowGreyLevelRunEmphasis = NumericTraits<OutputRealType>::ZeroValue();
-  OutputRealType highGreyLevelRunEmphasis = NumericTraits<OutputRealType>::ZeroValue();
-  OutputRealType shortRunLowGreyLevelEmphasis = NumericTraits<OutputRealType>::ZeroValue();
-  OutputRealType shortRunHighGreyLevelEmphasis = NumericTraits<OutputRealType>::ZeroValue();
-  OutputRealType longRunLowGreyLevelEmphasis = NumericTraits<OutputRealType>::ZeroValue();
-  OutputRealType longRunHighGreyLevelEmphasis = NumericTraits<OutputRealType>::ZeroValue();
-
-  vnl_vector<double> greyLevelNonuniformityVector(
-    m_NumberOfBinsPerAxis, 0.0 );
-  vnl_vector<double> runLengthNonuniformityVector(
-    m_NumberOfBinsPerAxis, 0.0 );
-
   for(unsigned int a = 0; a < m_NumberOfBinsPerAxis; ++a)
     {
     for(unsigned int b = 0; b < m_NumberOfBinsPerAxis; ++b)
       {
-      OutputRealType frequency = histogram[a][b];
-      if ( Math::ExactlyEquals(frequency, NumericTraits<OutputRealType>::ZeroValue()) )
-        {
-        continue;
-        }
-
-      double i2 = static_cast<double>( ( a + 1 ) * ( a + 1 ) );
-      double j2 = static_cast<double>( ( b + 1 ) * ( b + 1 ) );
-
-      // Traditional measures
-      shortRunEmphasis += ( frequency / j2 );
-      longRunEmphasis += ( frequency * j2 );
-
-      greyLevelNonuniformityVector[a] += frequency;
-      runLengthNonuniformityVector[b] += frequency;
-
-      // Measures from Chu et al.
-      lowGreyLevelRunEmphasis += ( frequency / i2 );
-      highGreyLevelRunEmphasis += ( frequency * i2 );
-
-      // Measures from Dasarathy and Holder
-      shortRunLowGreyLevelEmphasis += ( frequency / ( i2 * j2 ) );
-      shortRunHighGreyLevelEmphasis += ( frequency * i2 / j2 );
-      longRunLowGreyLevelEmphasis += ( frequency * j2 / i2 );
-      longRunHighGreyLevelEmphasis += ( frequency * i2 * j2 );
-
+        outputPixel[a * m_NumberOfBinsPerAxis + b] = histogram[a][b];
       }
-    }
-  greyLevelNonuniformity =
-          greyLevelNonuniformityVector.squared_magnitude();
-  runLengthNonuniformity =
-          runLengthNonuniformityVector.squared_magnitude();
-
-  // Normalize all measures by the total number of runs
-
-  shortRunEmphasis /= static_cast<double>( totalNumberOfRuns );
-  longRunEmphasis /= static_cast<double>( totalNumberOfRuns );
-  greyLevelNonuniformity /= static_cast<double>( totalNumberOfRuns );
-  runLengthNonuniformity /= static_cast<double>( totalNumberOfRuns );
-
-  lowGreyLevelRunEmphasis /= static_cast<double>( totalNumberOfRuns );
-  highGreyLevelRunEmphasis /= static_cast<double>( totalNumberOfRuns );
-
-  shortRunLowGreyLevelEmphasis /= static_cast<double>( totalNumberOfRuns );
-  shortRunHighGreyLevelEmphasis /= static_cast<double>( totalNumberOfRuns );
-  longRunLowGreyLevelEmphasis /= static_cast<double>( totalNumberOfRuns );
-  longRunHighGreyLevelEmphasis /= static_cast<double>( totalNumberOfRuns );
-
-  outputPixel[0] = shortRunEmphasis;
-  outputPixel[1] = longRunEmphasis;
-  outputPixel[2] = greyLevelNonuniformity;
-  outputPixel[3] = runLengthNonuniformity;
-  outputPixel[4] = lowGreyLevelRunEmphasis;
-  outputPixel[5] = highGreyLevelRunEmphasis;
-  outputPixel[6] = shortRunLowGreyLevelEmphasis;
-  outputPixel[7] = shortRunHighGreyLevelEmphasis;
-  outputPixel[8] = longRunLowGreyLevelEmphasis;
-  outputPixel[9] = longRunHighGreyLevelEmphasis;
+  }
 
 }
 

@@ -34,7 +34,7 @@ int RunLengthTextureFeaturesImageFilterInstantiationTest( int argc, char *argv[]
     }
 
   const unsigned int ImageDimension = 3;
-  const unsigned int VectorComponentDimension = 10;
+  const unsigned int VectorComponentDimension = 15*15;
 
   // Declare types
   typedef int                                         InputPixelType;

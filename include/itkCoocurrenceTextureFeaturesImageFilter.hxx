@@ -260,7 +260,7 @@ CoocurrenceTextureFeaturesImageFilter<TInputImage, TOutputImage>
   // components, then an exception will be thrown.
   if ( output->GetNumberOfComponentsPerPixel() != 8 )
     {
-    output->SetNumberOfComponentsPerPixel( 8 );
+    output->SetNumberOfComponentsPerPixel(  m_NumberOfBinsPerAxis * m_NumberOfBinsPerAxis );
     }
 }
 
@@ -302,75 +302,13 @@ CoocurrenceTextureFeaturesImageFilter<TInputImage, TOutputImage>
 ::ComputeFeatures( const vnl_matrix<unsigned int> &hist, const unsigned int totalNumberOfFreq,
                    typename TOutputImage::PixelType &outputPixel)
 {
-    // Now get the various means and variances. This is takes two passes
-    // through the histogram.
-    double pixelMean;
-    double marginalMean;
-    double marginalDevSquared;
-    double pixelVariance;
-
-    this->ComputeMeansAndVariances(hist,
-                                   totalNumberOfFreq,
-                                   pixelMean,
-                                   marginalMean,
-                                   marginalDevSquared,
-                                   pixelVariance);
-
-    // Finally compute the texture features. Another pass.
-    MeasurementType energy      = NumericTraits< MeasurementType >::ZeroValue();
-    MeasurementType entropy     = NumericTraits< MeasurementType >::ZeroValue();
-    MeasurementType correlation = NumericTraits< MeasurementType >::ZeroValue();
-
-    MeasurementType inverseDifferenceMoment  = NumericTraits< MeasurementType >::ZeroValue();
-
-    MeasurementType inertia             = NumericTraits< MeasurementType >::ZeroValue();
-    MeasurementType clusterShade        = NumericTraits< MeasurementType >::ZeroValue();
-    MeasurementType clusterProminence   = NumericTraits< MeasurementType >::ZeroValue();
-    MeasurementType haralickCorrelation = NumericTraits< MeasurementType >::ZeroValue();
-
-    double pixelVarianceSquared = pixelVariance * pixelVariance;
-    // Variance is only used in correlation. If variance is 0, then
-    //   (index[0] - pixelMean) * (index[1] - pixelMean)
-    // should be zero as well. In this case, set the variance to 1. in
-    // order to avoid NaN correlation.
-    if( Math::FloatAlmostEqual( pixelVarianceSquared, 0.0, 4, 2*NumericTraits<double>::epsilon() ) )
-      {
-      pixelVarianceSquared = 1.;
-      }
-    const double log2 = std::log(2.0);
-
     for(unsigned int a = 0; a < m_NumberOfBinsPerAxis; ++a)
       {
       for(unsigned int b = 0; b < m_NumberOfBinsPerAxis; ++b)
         {
-        float frequency = hist[a][b] / (float)totalNumberOfFreq;
-        if ( Math::AlmostEquals( frequency, NumericTraits< float >::ZeroValue() ) )
-          {
-          continue; // no use doing these calculations if we're just multiplying by
-                    // zero.
-          }
-
-      energy += frequency * frequency;
-      entropy -= ( frequency > 0.0001 ) ? frequency *std::log(frequency) / log2:0;
-      correlation += ( ( a - pixelMean ) * ( b - pixelMean ) * frequency ) / pixelVarianceSquared;
-      inverseDifferenceMoment += frequency / ( 1.0 + ( a - b ) * ( a - b ) );
-      inertia += ( a - b ) * ( a - b ) * frequency;
-      clusterShade += std::pow( ( a - pixelMean ) + ( b - pixelMean ), 3 )  * frequency;
-      clusterProminence += std::pow( ( a - pixelMean ) + ( b - pixelMean ), 4 ) * frequency;
-      haralickCorrelation += a * b * frequency;
+          outputPixel[a * m_NumberOfBinsPerAxis + b] = hist[a][b];
         }
-      }
-
-    haralickCorrelation = ( haralickCorrelation - marginalMean * marginalMean ) / marginalDevSquared;
-
-    outputPixel[0] = energy;
-    outputPixel[1] = entropy;
-    outputPixel[2] = correlation;
-    outputPixel[3] = inverseDifferenceMoment;
-    outputPixel[4] = inertia;
-    outputPixel[5] = clusterShade;
-    outputPixel[6] = clusterProminence;
-    outputPixel[7] = haralickCorrelation;
+    }
 }
 
 template<typename TInputImage, typename TOutputImage>

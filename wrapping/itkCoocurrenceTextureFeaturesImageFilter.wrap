@@ -1,4 +1,4 @@
-set(OutputVectorDim 8)
+set(OutputVectorDim 100)
 itk_wrap_class("itk::FixedArray")
   itk_wrap_template("${ITKM_F}${OutputVectorDim}" "${ITKT_F},${OutputVectorDim}")
 itk_end_wrap_class()

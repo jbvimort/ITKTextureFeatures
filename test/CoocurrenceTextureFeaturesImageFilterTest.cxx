@@ -36,7 +36,7 @@ int CoocurrenceTextureFeaturesImageFilterTest( int argc, char *argv[] )
     }
 
   const unsigned int ImageDimension = 3;
-  const unsigned int VectorComponentDimension = 8;
+  const unsigned int VectorComponentDimension = 100;
 
   // Declare types
   typedef int                                         InputPixelType;
